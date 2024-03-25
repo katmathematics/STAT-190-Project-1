@@ -21,9 +21,6 @@ library(zoo)
 #read in data
 lightning = read.csv("C:/Users/clbpt/OneDrive/Documents/GitHub/STAT-172-Project-1/data/web_data/ncei_data/nldn-tiles-2020.csv")
 
-lightning <- lightning %>%
-  rename(date = )
-
 lonlat_to_county_sp <- function(pointsDF) {
   # Prepare SpatialPolygons object with one SpatialPolygon
   # per state (plus DC, minus HI & AK)
@@ -46,18 +43,21 @@ lonlat_to_county_sp <- function(pointsDF) {
 
 
 # Test the function using points in Wisconsin and Oregon.
-testPoints <- data.frame(x = c(-90, -120), y = c(44, 44))
+#testPoints <- data.frame(x = c(-90, -120), y = c(44, 44))
 
 #lonlat_to_county_sp(testPoints)
 #[1] "wisconsin" "oregon" # IT WORKS
 
 testPoints <- data.frame(x = lightning$CENTERLON, y = lightning$CENTERLAT)
 
+#add a county column
 lightning$county <- lonlat_to_county_sp(testPoints)
 
+lightning$X.ZDAY <- as.Date(as.character(lightning$X.ZDAY), format = "%Y%m%d")
 
 lightning_monthly_scale_count <- lightning %>%
-  mutate(date = zoo::as.yearmon(date)) %>%
-  group_by(date, Region) %>%
-  summarize(mean_interchange = mean(interchange))
+  mutate(month = format(X.ZDAY, "%Y-%m")) %>%
+  group_by(month, county) %>%
+  summarize(total_lightning_count = sum(TOTAL_COUNT, na.rm = TRUE))
+
 
